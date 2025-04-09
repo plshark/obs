@@ -6,7 +6,7 @@
     body {
       margin: 0;
       background: rgba(0, 0, 0, 0);
-      font-size: 256px;
+      font-size: 512px;
       color: #00ffff;
       font-family: 'Segoe UI', sans-serif;
       overflow: hidden;
@@ -114,6 +114,7 @@
       const screenWidth = window.innerWidth;
       const totalDistance = textWidth + screenWidth;
 
+      // 小さくするほど遅くなる
       const duration = totalDistance / 500;
 
       textElem.style.setProperty('--scroll-end', `-${totalDistance}px`);

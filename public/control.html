@@ -14,6 +14,8 @@
   <button onclick="prevName()">◀ 前へ</button>
   <button onclick="nextName()">次へ ▶</button>
   <button onclick="showSpecialMessage('準備中です')">準備中です</button>
+  <input type="text" id="customTextInput" placeholder="メッセージを入力">
+  <button onclick="sendCustomMessage()">表示</button>
 
   <ul id="nameList"></ul>
 
@@ -117,6 +119,10 @@
     // ╚═╝  ╚═╝╚══════╝   ╚═╝   ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝     
 
     document.addEventListener('keydown', async (e) => {
+      const tag = document.activeElement.tagName;
+
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
       if (e.key === 'a') {
         if (currentSource === 'camera_source') {
           await showOnly('slide_source')
@@ -238,6 +244,16 @@
     // special
     function showSpecialMessage(message) {
       ws.send(JSON.stringify({ type: 'special', text: message }));
+    }
+
+    function sendCustomMessage() {
+      const input = document.getElementById('customTextInput');
+      const text = input.value.trim();
+      if (text) {
+        ws.send(JSON.stringify({ type: 'special', text }));
+        console.log('📤 特別メッセージ送信:', text);
+        input.value = ''; // 送信後クリア
+      }
     }
 
   </script>
