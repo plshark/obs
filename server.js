@@ -63,3 +63,4 @@ obs.connect("ws://localhost:4455").then(() => {
 }).catch(err => {
   console.error('OBS 接続失敗:', err);
 });
+

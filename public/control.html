@@ -11,6 +11,9 @@
   <button onclick="switchScene('カメラ')">🎥 カメラ</button>
   <button onclick="switchScene('スライド')">🖥 スライド</button>
 
+  <button onclick="switchToCamera()">カメラ</button>
+  <button onclick="switchToSlide()">スライド</button>
+
   <button onclick="hideText()">⛔ 暗転</button>
 
   <button onclick="prevName()">◀ 前へ</button>
@@ -80,10 +83,62 @@
       }
     }
 
-    // wss
-    function switchScene(sceneName) {
-      ws.send(JSON.stringify({ type: 'scene', scene: sceneName }));
+    //keymap
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'a') {
+        prevName(); // ◀ 前の名前
+      }
+      if (e.key === 'd') {
+        nextName(); // ▶ 次の名前
+      }
+    });
+
+    let obs;
+
+    async function connectOBS() {
+      const { default: OBSWebSocket } = await import('https://cdn.jsdelivr.net/npm/obs-websocket-js/+esm');
+      obs = new OBSWebSocket();
+      try {
+        await obs.connect('ws://localhost:4455'); // ポート番号は環境に合わせて
+        console.log('OBSに接続しました');
+      } catch (err) {
+        console.error('OBS接続失敗:', err);
+      }
     }
+
+    connectOBS();
+
+    let currentSource = 'camera_source'; // 初期状態（必要に応じて変更）
+
+    async function toggleCameraSlide() {
+      currentSource = currentSource === 'camera_source' ? 'slide_source' : 'camera_source';
+      await showOnly(currentSource);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault(); // スクロール防止
+        toggleCameraSlide();
+      }
+    });
+
+    async function showOnly(sourceNameToEnable) {
+      const sources = ['camera_source', 'slide_source'];
+      const res = await obs.call('GetSceneItemList', { sceneName: 'main_scene' });
+
+      for (const srcName of sources) {
+        const item = res.sceneItems.find(item => item.sourceName === srcName);
+        if (item) {
+          await obs.call('SetSceneItemEnabled', {
+            sceneName: 'main_scene',
+            sceneItemId: item.sceneItemId,
+            sceneItemEnabled: srcName === sourceNameToEnable
+          });
+        }
+      }
+    }
+
+
   </script>
 </body>
 

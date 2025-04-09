@@ -23,6 +23,16 @@
       transition: opacity 1s ease;
     }
 
+    #fadeOverlay {
+      position: fixed;
+      inset: 0;
+      background: black;
+      opacity: 0;
+      transition: opacity 1s ease;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
     @keyframes scroll-left {
       from {
         transform: translateX(0%) translateY(-50%);
