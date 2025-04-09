@@ -62,10 +62,21 @@
     let isShowingSpecial = false;
 
 
-    fetch('names.json')
-      .then(res => res.json())
-      .then(data => {
-        names = data;
+    // fetch('names.json')
+    //   .then(res => res.json())
+    //   .then(data => {
+    //     names = data;
+    //     renderList();
+    //   });
+
+    fetch('names.csv')
+      .then(res => res.text())
+      .then(csvText => {
+        const lines = csvText.trim().split('\n');
+        names = lines.map(line => {
+          // 各行をカンマで分割し、余分な " を取り除いてスペースで結合
+          return line.split(',').map(s => s.trim().replace(/^"|"$/g, '')).join('        ');
+        });
         renderList();
       });
 
