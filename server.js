@@ -52,15 +52,3 @@ wss.on('connection', (ws) => {
 server.listen(8090, () => {
   console.log('Server running at http://localhost:8090');
 });
-
-
-// obs
-const { OBSWebSocket } = require('obs-websocket-js');
-const obs = new OBSWebSocket();
-
-obs.connect("ws://localhost:4455").then(() => {
-  console.log('OBS WebSocket 接続成功');
-}).catch(err => {
-  console.error('OBS 接続失敗:', err);
-});
-
