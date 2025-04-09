@@ -13,13 +13,52 @@
   <button onclick="toggleBlackout()">🌑 暗転トグル</button>
   <button onclick="prevName()">◀ 前へ</button>
   <button onclick="nextName()">次へ ▶</button>
+  <button onclick="showSpecialMessage('準備中です')">準備中です</button>
+
   <ul id="nameList"></ul>
 
   <script>
+    // ██████╗ ██╗███████╗██████╗ ██╗      █████╗ ██╗   ██╗
+    // ██╔══██╗██║██╔════╝██╔══██╗██║     ██╔══██╗╚██╗ ██╔╝
+    // ██║  ██║██║███████╗██████╔╝██║     ███████║ ╚████╔╝ 
+    // ██║  ██║██║╚════██║██╔═══╝ ██║     ██╔══██║  ╚██╔╝  
+    // ██████╔╝██║███████║██║     ███████╗██║  ██║   ██║   
+    // ╚═════╝ ╚═╝╚══════╝╚═╝     ╚══════╝╚═╝  ╚═╝   ╚═╝   
+
     const ws = new WebSocket('ws://127.0.0.1:8090');
+    ws.onopen = () => {
+      console.log('✅ WebSocket接続成功');
+    };
+
+    ws.onerror = (err) => {
+      console.error('🛑 WebSocketエラー:', err);
+    };
+
+    ws.onclose = () => {
+      console.log('❌ WebSocket切断');
+    };
+
+    function sendCurrentName() {
+      if (names[currentIndex]) {
+        const msg = { type: 'name', text: names[currentIndex] };
+        console.log('📤 送信:', msg);
+        ws.send(JSON.stringify(msg));
+      }
+    }
+
+
+    // ██████╗ ███████╗███╗   ██╗██████╗ ███████╗██████╗ 
+    // ██╔══██╗██╔════╝████╗  ██║██╔══██╗██╔════╝██╔══██╗
+    // ██████╔╝█████╗  ██╔██╗ ██║██║  ██║█████╗  ██████╔╝
+    // ██╔══██╗██╔══╝  ██║╚██╗██║██║  ██║██╔══╝  ██╔══██╗
+    // ██║  ██║███████╗██║ ╚████║██████╔╝███████╗██║  ██║
+    // ╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝╚═════╝ ╚══════╝╚═╝  ╚═╝
+
     const nameList = document.getElementById('nameList');
     let names = [];
     let currentIndex = 0;
+    let isShowingSpecial = false;
+
 
     fetch('names.json')
       .then(res => res.json())
@@ -44,34 +83,29 @@
     }
 
     function nextName() {
+      if (isShowingSpecial) {
+        isShowingSpecial = false;
+        sendCurrentName(); // 現在の名前に戻す
+        renderList();
+        return;
+      }
+
       currentIndex = (currentIndex + 1) % names.length;
       sendCurrentName();
       renderList();
     }
 
     function prevName() {
+      if (isShowingSpecial) {
+        isShowingSpecial = false;
+        sendCurrentName();
+        renderList();
+        return;
+      }
+
       currentIndex = (currentIndex - 1 + names.length) % names.length;
       sendCurrentName();
       renderList();
-    }
-    ws.onopen = () => {
-      console.log('✅ WebSocket接続成功');
-    };
-
-    ws.onerror = (err) => {
-      console.error('🛑 WebSocketエラー:', err);
-    };
-
-    ws.onclose = () => {
-      console.log('❌ WebSocket切断');
-    };
-
-    function sendCurrentName() {
-      if (names[currentIndex]) {
-        const msg = { type: 'name', text: names[currentIndex] };
-        console.log('📤 送信:', msg);
-        ws.send(JSON.stringify(msg));
-      }
     }
 
 
@@ -200,6 +234,12 @@
         sceneItemEnabled: false,
       });
     }
+
+    // special
+    function showSpecialMessage(message) {
+      ws.send(JSON.stringify({ type: 'special', text: message }));
+    }
+
   </script>
 </body>
 
