@@ -6,7 +6,7 @@
     body {
       margin: 0;
       background: rgba(0, 0, 0, 0);
-      font-size: 64px;
+      font-size: 256px;
       color: #00ffff;
       font-family: 'Segoe UI', sans-serif;
       overflow: hidden;
@@ -17,29 +17,21 @@
       top: 50%;
       left: 100%;
       white-space: nowrap;
-      transform: translateY(-50%);
+      animation: scroll-left linear infinite;
       animation-fill-mode: forwards;
-      opacity: 1;
-      transition: opacity 1s ease;
-    }
-
-    #fadeOverlay {
-      position: fixed;
-      inset: 0;
-      background: black;
       opacity: 0;
-      transition: opacity 1s ease;
-      pointer-events: none;
-      z-index: 9999;
+      /* ← 追加 */
+      transition: opacity 0.3s ease;
+      transform-origin: center;
     }
 
     @keyframes scroll-left {
       from {
-        transform: translateX(0%) translateY(-50%);
+        transform: translateX(0%) translateY(-50%) scaleX(0.5);
       }
 
       to {
-        transform: translateX(var(--scroll-end)) translateY(-50%);
+        transform: translateX(var(--scroll-end)) translateY(-50%) scaleX(0.5);
       }
     }
   </style>
@@ -99,39 +91,28 @@
     function playLoop() {
       if (!currentText) return;
 
+      textElem.style.transition = 'none';
+
       textElem.innerText = currentText;
 
-      textElem.style.transition = 'none';
       textElem.style.opacity = '1';
 
-      // アニメーション再構成
       textElem.style.animation = 'none';
       void textElem.offsetWidth;
 
       const textWidth = textElem.offsetWidth;
       const screenWidth = window.innerWidth;
       const totalDistance = textWidth + screenWidth;
-      const duration = totalDistance / 100;
+
+      const duration = totalDistance / 500;
 
       textElem.style.setProperty('--scroll-end', `-${totalDistance}px`);
       textElem.style.animation = `scroll-left ${duration}s linear forwards`;
     }
 
-
-
     textElem.addEventListener('animationend', playLoop);
-
     connectWebSocket();
   </script>
-
-  <!-- <script>
-  const textElem = document.getElementById('text');
-  textElem.innerText = 'テスト表示';
-  textElem.style.animation = 'none';
-  void textElem.offsetWidth;
-  textElem.style.animation = null;
-</script> -->
-
 </body>
 
 </html>
