@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <title>操作画面</title>
+</head>
+
+<body>
+  <h1>参加者表示コントロール</h1>
+  <button onclick="prevName()">◀ 前へ</button>
+  <button onclick="nextName()">次へ ▶</button>
+  <ul id="nameList"></ul>
+
+  <script>
+    const ws = new WebSocket('ws://127.0.0.1:8090');
+    const nameList = document.getElementById('nameList');
+    let names = [];
+    let currentIndex = 0;
+
+    fetch('names.json')
+      .then(res => res.json())
+      .then(data => {
+        names = data;
+        renderList();
+      });
+
+    function renderList() {
+      nameList.innerHTML = '';
+      names.forEach((name, i) => {
+        const li = document.createElement('li');
+        li.textContent = `${i === currentIndex ? '▶ ' : ''}${name}`;
+        nameList.appendChild(li);
+      });
+    }
+
+    function sendCurrentName() {
+      if (names[currentIndex]) {
+        ws.send(JSON.stringify({ type: 'name', text: names[currentIndex] }));
+      }
+    }
+
+    function nextName() {
+      currentIndex = (currentIndex + 1) % names.length;
+      sendCurrentName();
+      renderList();
+    }
+
+    function prevName() {
+      currentIndex = (currentIndex - 1 + names.length) % names.length;
+      sendCurrentName();
+      renderList();
+    }
+    ws.onopen = () => {
+      console.log('✅ WebSocket接続成功');
+    };
+
+    ws.onerror = (err) => {
+      console.error('🛑 WebSocketエラー:', err);
+    };
+
+    ws.onclose = () => {
+      console.log('❌ WebSocket切断');
+    };
+
+    function sendCurrentName() {
+      if (names[currentIndex]) {
+        const msg = { type: 'name', text: names[currentIndex] };
+        console.log('📤 送信:', msg);
+        ws.send(JSON.stringify(msg));
+      }
+    }
+  </script>
+</body>
+
+</html>

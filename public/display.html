@@ -1,0 +1,113 @@
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      margin: 0;
+      background: rgba(0, 0, 0, 0);
+      font-size: 64px;
+      color: #00ffff;
+      font-family: 'Segoe UI', sans-serif;
+      overflow: hidden;
+    }
+
+    #text {
+      position: absolute;
+      top: 50%;
+      left: 100%;
+      white-space: nowrap;
+      transform: translateY(-50%);
+      animation-fill-mode: forwards;
+    }
+
+    @keyframes scroll-left {
+      from {
+        transform: translateX(0%) translateY(-50%);
+      }
+
+      to {
+        transform: translateX(var(--scroll-end)) translateY(-50%);
+      }
+    }
+  </style>
+
+</head>
+
+<body>
+  <div id="text"></div>
+
+  <script>
+    const textElem = document.getElementById('text');
+    let currentText = "";
+
+    let ws;
+    let retryTimeout = 1000; // 初回は1秒待つ
+
+    function connectWebSocket() {
+      ws = new WebSocket('ws://localhost:8090');
+
+      ws.onopen = () => {
+        console.log('✅ WebSocket connected');
+        retryTimeout = 1000; // 成功したらリトライ間隔リセット
+      };
+
+      ws.onmessage = async (event) => {
+        const text = await event.data.text();
+        const data = JSON.parse(text);
+        if (data.type === 'name') {
+          currentText = data.text;
+          playLoop();
+        }
+      };
+
+      ws.onclose = () => {
+        console.warn('⚠️ WebSocket closed, retrying in', retryTimeout, 'ms');
+        setTimeout(connectWebSocket, retryTimeout);
+        retryTimeout = Math.min(retryTimeout * 2, 10000); // 最大10秒まで増加
+      };
+
+      ws.onerror = (err) => {
+        console.error('WebSocket error:', err);
+        ws.close();
+      };
+    }
+
+    function playLoop() {
+      if (!currentText) return;
+
+      textElem.innerText = currentText;
+
+      // 一時的に表示してサイズを測る
+      textElem.style.animation = 'none';
+      textElem.style.left = '100%';
+      void textElem.offsetWidth; // 強制再描画
+
+      const textWidth = textElem.offsetWidth;
+      const screenWidth = window.innerWidth;
+      const totalDistance = textWidth + screenWidth;
+
+      const duration = totalDistance / 1000; // px/秒（速度調整したいならこの数値を調整）
+
+      textElem.style.setProperty('--scroll-end', `-${totalDistance}px`);
+      textElem.style.animation = `scroll-left ${duration}s linear forwards`;
+    }
+
+
+
+    textElem.addEventListener('animationend', playLoop);
+
+    connectWebSocket();
+  </script>
+
+  <!-- <script>
+  const textElem = document.getElementById('text');
+  textElem.innerText = 'テスト表示';
+  textElem.style.animation = 'none';
+  void textElem.offsetWidth;
+  textElem.style.animation = null;
+</script> -->
+
+</body>
+
+</html>
