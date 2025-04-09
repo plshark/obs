@@ -3,6 +3,8 @@ const WebSocket = require('ws');
 const fs = require('fs');
 const path = require('path');
 
+
+// wss
 const server = http.createServer((req, res) => {
   const filePath = path.join(__dirname, 'public', req.url === '/' ? 'control.html' : req.url);
   const extname = path.extname(filePath);
@@ -43,4 +45,15 @@ wss.on('connection', (ws) => {
 
 server.listen(8090, () => {
   console.log('Server running at http://localhost:8090');
+});
+
+
+// obs
+const { OBSWebSocket } = require('obs-websocket-js');
+const obs = new OBSWebSocket();
+
+obs.connect("ws://localhost:4455").then(() => {
+  console.log('OBS WebSocket 接続成功');
+}).catch(err => {
+  console.error('OBS 接続失敗:', err);
 });

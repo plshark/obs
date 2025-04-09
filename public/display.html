@@ -19,6 +19,8 @@
       white-space: nowrap;
       transform: translateY(-50%);
       animation-fill-mode: forwards;
+      opacity: 1;
+      transition: opacity 1s ease;
     }
 
     @keyframes scroll-left {
@@ -55,11 +57,22 @@
       ws.onmessage = async (event) => {
         const text = await event.data.text();
         const data = JSON.parse(text);
+
         if (data.type === 'name') {
           currentText = data.text;
           playLoop();
         }
+
+        if (data.type === 'hide') {
+          fadeOutText();
+        }
       };
+
+      function fadeOutText() {
+        textElem.style.animation = 'none';
+        textElem.style.transition = 'opacity 1s';
+        textElem.style.opacity = '0';
+      }
 
       ws.onclose = () => {
         console.warn('⚠️ WebSocket closed, retrying in', retryTimeout, 'ms');
@@ -78,16 +91,17 @@
 
       textElem.innerText = currentText;
 
-      // 一時的に表示してサイズを測る
+      textElem.style.transition = 'none';
+      textElem.style.opacity = '1';
+
+      // アニメーション再構成
       textElem.style.animation = 'none';
-      textElem.style.left = '100%';
-      void textElem.offsetWidth; // 強制再描画
+      void textElem.offsetWidth;
 
       const textWidth = textElem.offsetWidth;
       const screenWidth = window.innerWidth;
       const totalDistance = textWidth + screenWidth;
-
-      const duration = totalDistance / 1000; // px/秒（速度調整したいならこの数値を調整）
+      const duration = totalDistance / 100;
 
       textElem.style.setProperty('--scroll-end', `-${totalDistance}px`);
       textElem.style.animation = `scroll-left ${duration}s linear forwards`;

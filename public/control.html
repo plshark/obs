@@ -8,6 +8,11 @@
 
 <body>
   <h1>参加者表示コントロール</h1>
+  <button onclick="switchScene('カメラ')">🎥 カメラ</button>
+  <button onclick="switchScene('スライド')">🖥 スライド</button>
+
+  <button onclick="hideText()">⛔ 暗転</button>
+
   <button onclick="prevName()">◀ 前へ</button>
   <button onclick="nextName()">次へ ▶</button>
   <ul id="nameList"></ul>
@@ -40,6 +45,10 @@
       }
     }
 
+    function hideText() {
+      ws.send(JSON.stringify({ type: 'hide' }));
+    }
+
     function nextName() {
       currentIndex = (currentIndex + 1) % names.length;
       sendCurrentName();
@@ -69,6 +78,11 @@
         console.log('📤 送信:', msg);
         ws.send(JSON.stringify(msg));
       }
+    }
+
+    // wss
+    function switchScene(sceneName) {
+      ws.send(JSON.stringify({ type: 'scene', scene: sceneName }));
     }
   </script>
 </body>
