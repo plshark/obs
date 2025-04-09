@@ -32,11 +32,17 @@ let clients = [];
 wss.on('connection', (ws) => {
   clients.push(ws);
   ws.on('message', (message) => {
+    const data = JSON.parse(message);
     clients.forEach(client => {
       if (client.readyState === WebSocket.OPEN) {
         client.send(message);
       }
     });
+    if (data.type === 'scene') {
+      obs.call('SetCurrentProgramScene', { sceneName: data.scene })
+        .then(() => console.log(`🎬 シーン切替: ${data.scene}`))
+        .catch(console.error);
+    }
   });
   ws.on('close', () => {
     clients = clients.filter(c => c !== ws);
