@@ -10,7 +10,7 @@
   <h1>参加者表示コントロール</h1>
   <button onclick="switchToCamera()">カメラ</button>
   <button onclick="switchToSlide()">スライド</button>
-  <button onclick="hideText()">⛔ 暗転</button>
+  <button onclick="toggleBlackout()">🌑 暗転トグル</button>
   <button onclick="prevName()">◀ 前へ</button>
   <button onclick="nextName()">次へ ▶</button>
   <ul id="nameList"></ul>
@@ -41,10 +41,6 @@
       if (names[currentIndex]) {
         ws.send(JSON.stringify({ type: 'name', text: names[currentIndex] }));
       }
-    }
-
-    function hideText() {
-      ws.send(JSON.stringify({ type: 'hide' }));
     }
 
     function nextName() {
@@ -106,6 +102,9 @@
         e.preventDefault(); // スクロール防止
         toggleCameraSlide();
       }
+      if (e.key === 'w') {
+        await toggleBlackout();
+      }
     });
 
 
@@ -123,6 +122,7 @@
       obs = new OBSWebSocket();
       try {
         await obs.connect('ws://localhost:4455'); // ポート番号は環境に合わせて
+        await getSceneItemIds();
         console.log('OBSに接続しました');
       } catch (err) {
         console.error('OBS接続失敗:', err);
@@ -134,12 +134,14 @@
     let currentSource = 'camera_source'; // 初期状態（必要に応じて変更）
 
     async function toggleCameraSlide() {
+      clearBlackout()
       currentSource = currentSource === 'camera_source' ? 'slide_source' : 'camera_source';
       await showOnly(currentSource);
     }
 
 
     async function showOnly(sourceNameToEnable) {
+      clearBlackout()
       const sources = ['camera_source', 'slide_source'];
       const res = await obs.call('GetSceneItemList', { sceneName: 'main_scene' });
 
@@ -153,6 +155,50 @@
           });
         }
       }
+    }
+
+
+    // ██████╗ ██╗      █████╗  ██████╗██╗  ██╗ ██████╗ ██╗   ██╗████████╗
+    // ██╔══██╗██║     ██╔══██╗██╔════╝██║ ██╔╝██╔═══██╗██║   ██║╚══██╔══╝
+    // ██████╔╝██║     ███████║██║     █████╔╝ ██║   ██║██║   ██║   ██║   
+    // ██╔══██╗██║     ██╔══██║██║     ██╔═██╗ ██║   ██║██║   ██║   ██║   
+    // ██████╔╝███████╗██║  ██║╚██████╗██║  ██╗╚██████╔╝╚██████╔╝   ██║   
+    // ╚═════╝ ╚══════╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝ ╚═════╝  ╚═════╝    ╚═╝   
+
+    let blackoutItemId;
+    async function getSceneItemIds() {
+      const res = await obs.call('GetSceneItemList', { sceneName: 'main_scene' });
+      for (const item of res.sceneItems) {
+        if (item.sourceName === 'blackout_source') {
+          blackoutItemId = item.sceneItemId;
+        }
+      }
+    }
+    let isBlackout = false;
+
+    async function toggleBlackout() {
+      isBlackout = !isBlackout;
+
+      if (!blackoutItemId) return;
+
+      await obs.call('SetSceneItemEnabled', {
+        sceneName: 'main_scene',
+        sceneItemId: blackoutItemId,
+        sceneItemEnabled: isBlackout,
+      });
+
+      console.log(isBlackout ? '🌑 暗転 ON' : '☀️ 暗転 OFF');
+    }
+
+    async function clearBlackout() {
+      isBlackout = false
+      console.log(blackoutItemId)
+      if (!blackoutItemId) return;
+      await obs.call('SetSceneItemEnabled', {
+        sceneName: 'main_scene',
+        sceneItemId: blackoutItemId,
+        sceneItemEnabled: false,
+      });
     }
   </script>
 </body>
