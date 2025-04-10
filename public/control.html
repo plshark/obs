@@ -6,16 +6,71 @@
   <title>操作画面</title>
 </head>
 
+<style>
+  button {
+    height: 100px;
+    width: 200px;
+    font-size: 20px;
+    border-radius: 5px;
+    margin: 0 5px;
+  }
+
+  input {
+    height: 100px;
+    width: 200px;
+    font-size: 24px;
+    border-radius: 5px;
+    margin: 0 5px;
+
+  }
+
+  .row {
+    margin-top: 10px;
+  }
+
+  .container {
+    display: grid;
+    grid-template-columns: auto auto auto auto;
+    gap: 5px;
+  }
+
+  .button {
+    border: 1px solid #000000;
+    border-radius: 5px;
+    padding: 5px;
+    cursor: pointer;
+    height: 100px;
+    text-align: center;
+    line-height: 100px;
+    font-size: 24px;
+  }
+  .button-wide {
+    grid-column-start: 1;
+    grid-column-end: 3;
+  }
+
+  .button-wide-2 {
+    grid-column-start: 3;
+    grid-column-end: 5;
+  }
+</style>
+
 <body>
-  <h1>参加者表示コントロール</h1>
-  <button onclick="switchToCamera()">カメラ</button>
-  <button onclick="switchToSlide()">スライド</button>
-  <button onclick="toggleBlackout()">🌑 暗転トグル</button>
-  <button onclick="prevName()">◀ 前へ</button>
-  <button onclick="nextName()">次へ ▶</button>
-  <button onclick="showSpecialMessage('準備中です')">準備中です</button>
-  <input type="text" id="customTextInput" placeholder="メッセージを入力">
-  <button onclick="sendCustomMessage()">表示</button>
+  <h1>コントロールパネル</h1>
+  <div class="container">
+    <div class="button" onclick="showOnly('camera_source')">カメラ</div>
+    <div class="button" onclick="showOnly('slide_source')">スライド</div>
+    <div class="button" onclick="toggleBlackout()">🌑 暗転トグル</div>
+    <div class="button button-wide" onclick="prevName()">◀ 前へ</div>
+    <div class="button button-wide-2" onclick="nextName()">次へ ▶</div>
+  </div>
+  <div class="row">
+    <button onclick="showSpecialMessage('準備中です')">準備中です</button>
+  </div>
+  <div class="row">
+    <input type="text" id="customTextInput" placeholder="メッセージを入力">
+    <button onclick="sendCustomMessage()">表示</button>
+  </div>
 
   <ul id="nameList"></ul>
 
@@ -88,7 +143,8 @@
       }
     }
 
-    function nextName() {
+    async function nextName() {
+      // await showOnly('slide_source')
       if (isShowingSpecial) {
         isShowingSpecial = false;
         sendCurrentName(); // 現在の名前に戻す
@@ -99,9 +155,11 @@
       currentIndex = (currentIndex + 1) % names.length;
       sendCurrentName();
       renderList();
+      currentSource = ''
     }
 
-    function prevName() {
+    async function prevName() {
+      // await showOnly('slide_source')
       if (isShowingSpecial) {
         isShowingSpecial = false;
         sendCurrentName();
@@ -199,6 +257,7 @@
           });
         }
       }
+      currentSource = sourceNameToEnable
     }
 
 
