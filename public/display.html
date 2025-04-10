@@ -6,41 +6,37 @@
     body {
       margin: 0;
       background: rgba(0, 0, 0, 0);
-      font-size: 768px;
-      color: #00ffff;
-      font-family: 'Segoe UI', sans-serif;
       overflow: hidden;
     }
 
-    #text {
-      position: absolute;
-      top: 50%;
-      left: 10%;
-      white-space: nowrap;
-      animation: scroll-left linear infinite;
-      animation-fill-mode: forwards;
-      opacity: 0;
-      white-space: pre;
-      transition: opacity 0.3s ease;
-      transform-origin: center;
+    .scroll-container {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      position: relative;
     }
 
-    @keyframes scroll-left {
-      from {
-        transform: translateX(0%) translateY(-50%) scaleX(0.5);
-      }
-
-      to {
-        transform: translateX(var(--scroll-end)) translateY(-50%) scaleX(0.5);
-      }
+    #text {
+      font-size: 512px;
+      /* ここを好きに変えてもOK！ */
+      font-weight: bold;
+      white-space: nowrap;
+      color: #fff;
+      position: absolute;
+      will-change: transform;
+      transform: scaleX(0.5);
     }
   </style>
 
 </head>
 
 <body>
-  <div id="text"></div>
+  <div class="scroll-container">
 
+    <div id="text"></div>
+  </div>
   <script>
     const textElem = document.getElementById('text');
     let isShowingSpecial = false;
@@ -72,19 +68,7 @@
           currentText = data.text;
           playLoop();
         }
-
-
-
-        if (data.type === 'hide') {
-          fadeOutText();
-        }
       };
-
-      function fadeOutText() {
-        textElem.style.animation = 'none';
-        textElem.style.transition = 'opacity 1s';
-        textElem.style.opacity = '0';
-      }
 
       ws.onclose = () => {
         console.warn('⚠️ WebSocket closed, retrying in', retryTimeout, 'ms');
@@ -101,27 +85,40 @@
     function playLoop() {
       if (!currentText) return;
 
-      textElem.style.transition = 'none';
+      const scaleX = 0.5;
+      const screenWidth = window.innerWidth;
 
+      // 一旦 transform 無効化してテキスト適用
+      textElem.style.transform = "none";
       textElem.innerText = currentText;
 
-      textElem.style.opacity = '1';
+      // 次のフレームで幅計算 & アニメーション開始
+      requestAnimationFrame(() => {
+        const rawWidth = textElem.offsetWidth;
+        const scaledWidth = rawWidth * scaleX;
+        const totalDistance = screenWidth + scaledWidth;
 
-      textElem.style.animation = 'none';
-      void textElem.offsetWidth;
+        // スケール適用 & 原点調整（左から縮小）
+        textElem.style.transform = `scaleX(${scaleX})`;
+        textElem.style.transformOrigin = "left center";
 
-      const textWidth = textElem.offsetWidth;
-      const screenWidth = window.innerWidth;
-      const totalDistance = textWidth + screenWidth;
+        // スクロール速度調整
+        const duration = totalDistance / 100; // px/sec
 
-      // 小さくするほど遅くなる
-      const duration = totalDistance / 500;
-
-      textElem.style.setProperty('--scroll-end', `-${totalDistance}px`);
-      textElem.style.animation = `scroll-left ${duration}s linear forwards`;
+        // アニメーション開始
+        textElem.animate([
+          { transform: `translateX(${screenWidth}px) scaleX(${scaleX})` },
+          { transform: `translateX(-${scaledWidth}px) scaleX(${scaleX})` }
+        ], {
+          duration: duration * 1000,
+          iterations: Infinity,
+          easing: 'linear'
+        });
+      });
     }
 
-    textElem.addEventListener('animationend', playLoop);
+
+    textElem.addEventListener('animationend', playLoop); // 必要なら
     connectWebSocket();
   </script>
 </body>
